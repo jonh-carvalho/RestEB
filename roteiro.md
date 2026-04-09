@@ -48,27 +48,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = True if os.getenv('DJANGO_DEBUG', 'True') == 'True' else False
 
 # Configuração do banco de dados
-# SQLite para desenvolvimento, preparado para RDS depois
-if DEBUG:
-    # SQLite para desenvolvimento local
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+# Database
+# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    # Configuração preparada para RDS (será ativada depois)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('RDS_DB_NAME', 'ebdb'),
-            'USER': os.getenv('RDS_USERNAME', ''),
-            'PASSWORD': os.getenv('RDS_PASSWORD', ''),
-            'HOST': os.getenv('RDS_HOSTNAME', ''),
-            'PORT': os.getenv('RDS_PORT', '5432'),
-        }
-    }
+}
 
 # Configuração de arquivos de mídia
 # SQLite não suporta S3, mas já preparamos o caminho
@@ -93,7 +81,7 @@ ALLOWED_HOSTS = os.getenv(
 ).split(',')
 
 # Arquivos estáticos para deploy
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 ```
 
@@ -199,18 +187,29 @@ option_settings:
     WSGIPath: catalogo/wsgi.py
   aws:elasticbeanstalk:application:environment:
     DJANGO_SETTINGS_MODULE: catalogo.settings
-    DJANGO_DEBUG: True
+    DJANGO_DEBUG: False
+  aws:elasticbeanstalk:environment:proxy:staticfiles:
+    /static: staticfiles
+    /media: media
 container_commands:
   01_migrate:
     command: "python manage.py migrate --noinput"
+    leader_only: true
   02_collectstatic:
     command: "python manage.py collectstatic --noinput"
+    leader_only: true
+  03_create_media_dir:
+    command: "mkdir -p media/produtos"
+  04_permissao_arquivo_sqlite:
+    command: "chmod 666 db.sqlite3"
+  05_permissao_pasta_sqlite:
+    command: "chmod 777 ."
 ```
 
 **`Procfile`**:
 
 ```
-web: gunicorn catalogo.wsgi:application --bind 0.0.0.0:$PORT
+web: gunicorn catalogo.wsgi:application --bind 127.0.0.1:8000
 ```
 
 **`.elasticbeanstalk/config.yml`** (usado no fluxo com EB CLI):
@@ -413,11 +412,11 @@ Antes de clicar em **Create environment**, valide:
 
 1. Plataforma selecionada no EB: **Python 3.12**.
 2. `requirements.txt` com versões corretas (`Django==6.0.4`, DRF e `gunicorn`).
-3. `Procfile` presente na raiz com `web: gunicorn catalogo.wsgi:application --bind 0.0.0.0:$PORT`.
+3. `Procfile` presente na raiz com `web: gunicorn catalogo.wsgi:application --bind 127.0.0.1:8000`.
 4. `.ebextensions/django.config` contém `WSGIPath`, `DJANGO_SETTINGS_MODULE` e `container_commands` (`migrate` + `collectstatic`).
 5. `catalogo/urls.py` possui rota `/` de healthcheck retornando `200`.
 6. `catalogo/settings.py` com `ALLOWED_HOSTS` via `DJANGO_ALLOWED_HOSTS`.
 7. Variáveis no EB definidas: `DJANGO_DEBUG=False` e `DJANGO_ALLOWED_HOSTS=<dominio-do-ambiente>,.elasticbeanstalk.com`.
 8. ZIP com arquivos na raiz (sem pasta pai) e sem `venv/`, `.venv/`, `.git/`, `db.sqlite3`, `__pycache__/`, `.env`.
-9. Usuário/roles IAM prontos para criar ambiente (incluindo `iam:PassRole` para service role e instance profile).
+9. Usuário IAM com permissão para política de criar ambiente EB.
 10. Após criar, ambiente deve ficar **Green** e endpoints `https://<dominio>/` e `https://<dominio>/api/produtos/` devem responder.
