@@ -15,27 +15,15 @@ SECRET_KEY = 'django-insecure-dz1&98_p4p#6(s99i9pd_s179)b7fk41x(-*zf2oj&_74_4ky&
 DEBUG = True if os.getenv('DJANGO_DEBUG', 'True') == 'True' else False
 
 # Configuração do banco de dados
-# SQLite para desenvolvimento, preparado para RDS depois
-if DEBUG:
-    # SQLite para desenvolvimento local
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
+# Database
+# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
-else:
-    # Configuração preparada para RDS (será ativada depois)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('RDS_DB_NAME', 'ebdb'),
-            'USER': os.getenv('RDS_USERNAME', ''),
-            'PASSWORD': os.getenv('RDS_PASSWORD', ''),
-            'HOST': os.getenv('RDS_HOSTNAME', ''),
-            'PORT': os.getenv('RDS_PORT', '5432'),
-        }
-    }
+}
 
 # Configuração de arquivos de mídia
 # SQLite não suporta S3, mas já preparamos o caminho
@@ -53,7 +41,10 @@ else:
         MEDIA_URL = '/media/'
         MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv(
+    'DJANGO_ALLOWED_HOSTS',
+    'localhost,127.0.0.1,.elasticbeanstalk.com,testserver',
+).split(',')
 
 
 # Application definition
@@ -134,3 +125,4 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
