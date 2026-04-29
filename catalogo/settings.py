@@ -15,7 +15,7 @@ SECRET_KEY = 'django-insecure-dz1&98_p4p#6(s99i9pd_s179)b7fk41x(-*zf2oj&_74_4ky&
 DEBUG = True if os.getenv('DJANGO_DEBUG', 'True') == 'True' else False
 
 # Configuração do banco de dados
-<<<<<<< HEAD
+
 # SQLite para desenvolvimento, preparado para RDS depois
 if DEBUG:
         # MySQL para desenvolvimento local
@@ -40,7 +40,7 @@ else:
             'HOST': os.getenv('RDS_HOSTNAME', ''),
             'PORT': os.getenv('RDS_PORT', '5432'),
         }
-=======
+    }
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
