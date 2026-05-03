@@ -15,42 +15,29 @@ SECRET_KEY = 'django-insecure-dz1&98_p4p#6(s99i9pd_s179)b7fk41x(-*zf2oj&_74_4ky&
 DEBUG = True if os.getenv('DJANGO_DEBUG', 'True') == 'True' else False
 
 # Configuração do banco de dados
+USE_SQLITE = os.getenv('USE_SQLITE', 'True') == 'True'
 
-# SQLite para desenvolvimento, preparado para RDS depois
-if DEBUG:
-        # MySQL para desenvolvimento local
+if USE_SQLITE:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv('MYSQL_DATABASE', 'catalogo'),
-            'USER': os.getenv('MYSQL_USER', 'root'),
-            'PASSWORD': os.getenv('MYSQL_PASSWORD', 'admin'),
-            'HOST': os.getenv('MYSQL_HOST', '127.0.0.1'),
-            'PORT': os.getenv('MYSQL_PORT', '3306'),
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 else:
-    # Configuração preparada para RDS (será ativada depois)
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('RDS_DB_NAME', 'ebdb'),
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('RDS_DB_NAME', ''),
             'USER': os.getenv('RDS_USERNAME', ''),
             'PASSWORD': os.getenv('RDS_PASSWORD', ''),
             'HOST': os.getenv('RDS_HOSTNAME', ''),
-            'PORT': os.getenv('RDS_PORT', '5432'),
+            'PORT': os.getenv('RDS_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
         }
     }
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
->>>>>>> 643448b938d39aa7584f92fbc22a5cf5c417588f
-    }
-}
 
 # Configuração de arquivos de mídia
 # SQLite não suporta S3, mas já preparamos o caminho
