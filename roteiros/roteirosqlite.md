@@ -309,6 +309,10 @@ global:
 
 #### Passo 2: Requisitos do projeto (Django 6 com Python 3.12+)
 
+```bash
+pip freeze > requirements.txt
+```
+
 **`requirements.txt`**:
 
 ```
