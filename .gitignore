@@ -1,6 +1,6 @@
 .mypy_cache/
-.vscode/
 .env
+.vscode/
 
 
 # Byte-compiled / optimized / DLL files
